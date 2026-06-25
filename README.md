@@ -1,3 +1,3 @@
 # life
 
-Personal life workspace.
+生活习惯登记系统网页版
