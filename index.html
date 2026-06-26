@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>今日习惯</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #f5f7fa;
+    color: #1e293b;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 32px 16px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 440px;
+  }
+
+  .header {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px 28px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    margin-bottom: 16px;
+  }
+
+  .header-date {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 4px;
+  }
+
+  .header-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: .02em;
+  }
+
+  .header-progress {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+  }
+
+  .progress-text {
+    font-size: 15px;
+    color: #475569;
+  }
+
+  .progress-text strong {
+    color: #10b981;
+    font-weight: 700;
+  }
+
+  .progress-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    margin-left: 16px;
+    max-width: 140px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: #10b981;
+    border-radius: 3px;
+    transition: width .35s ease;
+  }
+
+  .habit-list {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .habit-item {
+    display: flex;
+    align-items: center;
+    padding: 16px 28px;
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s ease;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .habit-item:last-child {
+    border-bottom: none;
+  }
+
+  .habit-item:hover {
+    background: #f8fafc;
+  }
+
+  .habit-check {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-right: 14px;
+    transition: all .25s ease;
+    font-size: 13px;
+    color: transparent;
+  }
+
+  .habit-item.done .habit-check {
+    background: #10b981;
+    border-color: #10b981;
+    color: #fff;
+  }
+
+  .habit-name {
+    font-size: 16px;
+    font-weight: 500;
+    transition: all .3s ease;
+  }
+
+  .habit-item.done .habit-name {
+    color: #94a3b8;
+    text-decoration: line-through;
+  }
+
+  .habit-item.done {
+    opacity: .7;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 28px;
+    color: #94a3b8;
+    font-size: 15px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    margin-bottom: 16px;
+  }
+
+  .empty-state .icon {
+    font-size: 40px;
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .add-form {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px 28px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    display: flex;
+    gap: 10px;
+  }
+
+  .add-form input {
+    flex: 1;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color .2s ease;
+    background: #f8fafc;
+  }
+
+  .add-form input:focus {
+    border-color: #10b981;
+    background: #fff;
+  }
+
+  .add-form input::placeholder {
+    color: #94a3b8;
+  }
+
+  .add-form button {
+    background: #10b981;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s ease;
+    white-space: nowrap;
+  }
+
+  .add-form button:hover {
+    background: #059669;
+  }
+
+  .add-form button:active {
+    transform: scale(.97);
+  }
+
+  @media (max-width: 480px) {
+    body { padding: 16px 12px; }
+    .header { padding: 20px; }
+    .habit-item { padding: 14px 20px; }
+    .add-form { padding: 16px 20px; }
+    .empty-state { padding: 40px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container" id="app">
+  <div class="header">
+    <div class="header-date" id="dateDisplay"></div>
+    <div class="header-title">今日习惯</div>
+    <div class="header-progress">
+      <span class="progress-text">今天完成 <strong id="progressCount">0</strong> / <span id="totalCount">0</span> 项</span>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="habit-list" id="habitList"></div>
+
+  <div class="empty-state" id="emptyState" style="display:none">
+    <span class="icon">🌱</span>
+    还没有习惯，添加第一个吧～
+  </div>
+
+  <form class="add-form" id="addForm">
+    <input type="text" id="habitInput" placeholder="输入习惯名称…" autocomplete="off" maxlength="30">
+    <button type="submit">＋添加</button>
+  </form>
+</div>
+
+<script>
+  (() => {
+    const STORAGE_KEY = 'habit_tracker_data';
+
+    function getToday() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function formatDate() {
+      const d = new Date();
+      const m = d.getMonth() + 1;
+      const day = d.getDate();
+      const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      const wd = weekdays[d.getDay()];
+      return `${m}月${day}日 ${wd}`;
+    }
+
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (_) {}
+      return { habits: [], records: {} };
+    }
+
+    function saveData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function getData() {
+      const data = loadData();
+      const today = getToday();
+      if (!data.records[today]) {
+        data.records[today] = [];
+      }
+      return data;
+    }
+
+    const dateDisplay = document.getElementById('dateDisplay');
+    const progressCount = document.getElementById('progressCount');
+    const totalCount = document.getElementById('totalCount');
+    const progressBarFill = document.getElementById('progressBarFill');
+    const habitList = document.getElementById('habitList');
+    const emptyState = document.getElementById('emptyState');
+    const addForm = document.getElementById('addForm');
+    const habitInput = document.getElementById('habitInput');
+
+    function render() {
+      const data = getData();
+      const today = getToday();
+      const habits = data.habits;
+      const doneIds = data.records[today] || [];
+      const total = habits.length;
+      const done = doneIds.length;
+
+      dateDisplay.textContent = formatDate();
+      progressCount.textContent = done;
+      totalCount.textContent = total;
+
+      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+      progressBarFill.style.width = pct + '%';
+
+      if (total === 0) {
+        habitList.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+      }
+
+      habitList.style.display = 'block';
+      emptyState.style.display = 'none';
+
+      let html = '';
+      for (const h of habits) {
+        const checked = doneIds.includes(h.id);
+        const cls = checked ? 'habit-item done' : 'habit-item';
+        const checkMark = checked ? '✓' : '';
+        html += '<div class="' + cls + '" data-id="' + h.id + '">' +
+          '<div class="habit-check">' + checkMark + '</div>' +
+          '<span class="habit-name">' + escapeHtml(h.name) + '</span>' +
+          '</div>';
+      }
+      habitList.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function toggleHabit(id) {
+      const data = loadData();
+      const today = getToday();
+      if (!data.records[today]) data.records[today] = [];
+      const idx = data.records[today].indexOf(id);
+      if (idx > -1) {
+        data.records[today].splice(idx, 1);
+      } else {
+        data.records[today].push(id);
+      }
+      saveData(data);
+      render();
+    }
+
+    function addHabit(name) {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      const data = loadData();
+      data.habits.push({ id: generateId(), name: trimmed, createdAt: getToday() });
+      saveData(data);
+      render();
+    }
+
+    habitList.addEventListener('click', (e) => {
+      const item = e.target.closest('.habit-item');
+      if (item) toggleHabit(item.dataset.id);
+    });
+
+    addForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const val = habitInput.value.trim();
+      if (!val) return;
+      addHabit(val);
+      habitInput.value = '';
+      habitInput.focus();
+    });
+
+    render();
+  })();
+</script>
+</body>
+</html>
